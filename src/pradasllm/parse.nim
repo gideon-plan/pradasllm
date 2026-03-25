@@ -1,8 +1,12 @@
 ## parse.nim -- Parse LLM response into variable assignments.
 {.experimental: "strict_funcs".}
 import std/[strutils, tables]
-import lattice
-proc parse_assignments*(response: string): Result[Table[string, int], BridgeError] =
+
+type
+  BridgeError* = object of CatchableError
+
+import basis/code/choice
+proc parse_assignments*(response: string): Choice[Table[string, int]] =
   var assignments: Table[string, int]
   for line in response.splitLines():
     let trimmed = line.strip()
@@ -14,5 +18,5 @@ proc parse_assignments*(response: string): Result[Table[string, int], BridgeErro
       try: assignments[k] = parseInt(v)
       except ValueError: continue
   if assignments.len == 0:
-    return Result[Table[string, int], BridgeError].bad(BridgeError(msg: "no valid assignments"))
-  Result[Table[string, int], BridgeError].good(assignments)
+    return bad[Table[string, int]]("pradasllm", "no valid assignments")
+  good(assignments)

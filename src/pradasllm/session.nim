@@ -1,10 +1,10 @@
 ## session.nim -- Combined prompt -> infer -> parse -> solve session.
 {.experimental: "strict_funcs".}
 
-import lattice, prompt, parse, warmstart
+import basis/code/choice, prompt, parse, warmstart
 type
-  InferenceFn* = proc(prompt_text: string): Result[string, BridgeError] {.raises: [].}
-  SolveFn* = proc(): Result[string, BridgeError] {.raises: [].}
+  InferenceFn* = proc(prompt_text: string): Choice[string] {.raises: [].}
+  SolveFn* = proc(): Choice[string] {.raises: [].}
   PradasLlmSession* = object
     inference_fn*: InferenceFn
     apply_fn*: ApplyFn
@@ -14,7 +14,7 @@ proc new_session*(inf_fn: InferenceFn, apply_fn: ApplyFn,
                   solve_fn: SolveFn): PradasLlmSession =
   PradasLlmSession(inference_fn: inf_fn, apply_fn: apply_fn, solve_fn: solve_fn)
 proc solve_with_hint*(s: var PradasLlmSession,
-                      desc: ProblemDesc): Result[string, BridgeError] =
+                      desc: ProblemDesc): Choice[string] =
   let prompt_text = format_prompt(desc)
   let response = s.inference_fn(prompt_text)
   if response.is_good:
